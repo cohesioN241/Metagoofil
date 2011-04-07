@@ -1,0 +1,57 @@
+*************************************
+*Metagoofil  1.4a                   *
+*Coded by Christian Martorella      *
+*Laramies - www.edge-security.com   *
+*cmartorella@edge-security.com      *
+*laramies.blogspot.com              *
+*************************************
+
+What is this?
+-------------
+
+Metagoofil is a tool for extracting metadata of public documents (pdf,doc,xls,ppt,etc) availables in the target websites.This information could be useful because you can get valid usernames, or people names, for using later in bruteforce password attacks (vpn, ftp, webapps), the tool will also extracts interesting "paths" of the documents, where we can get shared resources names, server names, etc.
+
+This version extracts the MAC address of the machine where the document was created. (Just for the Microsoft office documents)
+
+All this information should not be available on the net, but most of the companies doesn't have policies about information leaking... and most of them don't know this information exists.
+
+So you can show them what an attacker can obtain in a simple way.. 
+ 
+How it works?
+------------
+
+The tool first queries google for different filetypes that can have useful metadata (pdf, doc, xls,ppt,etc),
+then it download those documents to the disk and run the program "extract" on every file.
+
+Dependencies:
+------------
+This program take advantages from the "extract" program, so you need to install it in order to work.
+
+Debian:
+In debian is easy as: apt-get install libextractor
+
+OS X:
+Using Darwin ports, "port install libextractor"
+
+Windows: http://gnunet.org/libextractor/download/win/libextractor-0.5.14.zip
+
+Make sure 'extract' binary is on your path, if not you can modify extcommand variable inside program to suite your needs.
+
+
+Problems:
+---------
+
+On Osx the extract binary usually don't have the extension for analyzing Office documents. 
+
+Changelog 1.4a:
+-------------
+Fixed problems with google results.
+
+Changelog 1.4:
+-------------
+-Mac address extractor.
+-Check for cached files, and use them if exists.
+-Output enhanced :P
+
+Shouts goes to: Trompeti, Pluf, Al3x, Deepbit, Scorpionn, Javier Mendez, Darkraver and all S21sec Team.
+Special thanks to Deepbit for helping me fixing some bugs.
