@@ -1,20 +1,24 @@
 #Covered by GPL V2.0
+#!/usr/bin/python
 import time
 import string
 import httplib,sys
 from socket import *
 import re
 import getopt
-import urllib
 import time
 import os
+#import myUrllib
+import urllib
 
 
 print "\n*************************************"
-print "*MetaGooFil Ver. 1.4b		    *"
-print "*Coded by Christian Martorella      *"
+print "*MetaGooBingFil 	            *"
+print "*Derived from Chris Martorella      *"
 print "*Edge-Security Research             *"
 print "*cmartorella@edge-security.com      *"
+print "*Further modified by Chen           *"
+print "*Engine: [google.com | bing.com]    *"
 print "*************************************\n\n"
 
 
@@ -22,11 +26,11 @@ global word,w,limit,result,extcommand
 #Win
 ##extcommand='c:\extractor\\bin\extract.exe -l libextractor_ole2'
 #OSX
-#extcommand='/opt/local/bin/extract'
+extcommand='/opt/local/bin/extract'
 #Cygwin
 #extcommand='/cygdrive/c/extractor/bin/extract.exe'
-extcommand='/usr/bin/extract'
-
+#extcommand='/usr/bin/extract'
+#proxy={'http': 'http://130.92.70.254:3128'}
 result =[]
 global dir
 dir = "none"
@@ -47,7 +51,7 @@ def usage():
 #Mac address extractor#
 def get_mac(file,dir):
 	 	filename=dir+"/"+file	
-		line=open(filename,'r')
+		line=open(filename,'r').readlines()
 		res=""
 		for l in line:
 			res+=l
@@ -143,10 +147,11 @@ def get_info_pdf(file,dir):
 		return aut,pat
 
 
-def howmany(w):
-	 h = httplib.HTTP('www.google.com')
-	 h.putrequest('GET',"/search?num=100&start=0+hl=en&btnG=B%C3%BAsqueda+en+Google&meta=&q=site%3A"+w+"+filetype%3A"+file)
-      	 h.putheader('Host', 'www.google.com')
+def howmany(w, server):
+	 print '\n\nIN howmany, server is ', server
+	 h = httplib.HTTP(server)
+	 h.putrequest('GET',"/search?num=20&q=site%3A"+w+"+filetype%3A"+file)
+      	 h.putheader('Host', server)
 	 h.putheader('User-agent', 'Internet Explorer 6.0 ')
 	 h.endheaders()
 	 returncode, returnmsg, headers = h.getreply()
@@ -167,48 +172,70 @@ def howmany(w):
 	 if len(result) == 0:
 		clean = 0
 	 print clean
+	 print '\n\nIN howmany, server is ', server
 	 return clean
 
 
 
-def run(w,i):
+def run(w,i,server):
 	res = []
-	h = httplib.HTTP('www.google.com')
-	h.putrequest('GET',"/search?num=20&start="+str(i)+"&hl=en&btnG=B%C3%BAsqueda+en+Google&meta=&q=site%3A"+w+"+filetype%3A"+file)
-	h.putheader('Host', 'www.google.com')
-	h.putheader('User-Agent','Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6')
+	if server == 'www.yahoo.com':
+		server = 'search.yahoo.com'
+	h = httplib.HTTP(server)
+#	if server == 'www.yahoo.com':
+#		h = httplib.HTTP('search.yahoo.com')
+#	else:
+#		h = httplib.HTTP(server)
+	if server == 'www.google.com':
+		h.putrequest('GET',"/search?num=20&start="+str(i)+"&hl=en&btnG=B%C3%BAsqueda+en+Google&meta=&q=site%3A"+w+"+filetype%3A"+file)
+	elif server == 'www.bing.com':
+		h.putrequest('GET', "/search?num=20&q=site%3A"+w+"+filetype%3A"+file)
+	elif server == 'search.yahoo.com':
+		h.putrequest('GET', "/search?num=20&p=site%3A"+w+"+filetype%3A"+file)
+
+	h.putheader('Host', server)
 	h.endheaders()
 	returncode, returnmsg, headers = h.getreply()
 	data=h.getfile().read()
-	#r1 = re.compile('\[[A-Z]*\]</b>(<)/font></span> <h2 class=[^>]+><a href="([^"]+)"')
-	r1 = re.compile('><a href="([^"]+.'+file+')"')
+	if server == 'www.google.com':
+#		r1 = re.compile('/url\?q=(.+?'+file+')')
+		r1 = re.compile('href="(http://.{1,100}?\.'+file+')')
+		print '\nThe server I am using is ', server
+	else:
+		r1 = re.compile('href="(http://.{1,100}?\.'+file+')')
 	res = r1.findall(data)
+	for r in res: print r
 	return res
 
 
 
 def test(argv):
+	print len(argv)
 	global limit
 	global file
 	limit=20
 	down ='a'
-	if len(sys.argv) < 11:
+	if len(argv) < 13:
 		usage()
 	try :
-		opts, args = getopt.getopt(argv,"l:d:f:o:t:")
+		opts, args = getopt.getopt(argv,"l:d:f:o:t:e:p:")
 	except getopt.GetoptError:
 		usage()
 	for opt,arg in opts:
 		if opt == '-l':
 			limit = int(arg)
-        	elif opt == '-d':
+       		elif opt == '-d':
             		word = str(arg)
-        	elif opt == '-f':
+       		elif opt == '-f':
             		file = str(arg)
-        	elif opt == '-o':
+       		elif opt == '-o':
             		ofile = str(arg)
-		elif opt =='-t':
+		elif opt == '-t':
 			dir = str(arg)
+		elif opt == '-e':
+			server = 'www.' + str(arg)
+		elif opt == '-p':
+			p = 'http://' + str(arg)
 	if dir == 'none':
 		dir = word
 	if file != 'all':
@@ -238,8 +265,11 @@ def test(argv):
 	for fi in all:
 		file = fi
 		print "[+] Searching in " + word + " for: " + file
-		total = int(howmany(word))
-		print "[+] Total results in google: "+ str(total)
+		if server == 'www.google.com':
+			total = int(howmany(word, server))
+		else:
+			total = 1000
+		print "[+] Total results in " + server + ": "+ str(total)
 		if total == 0:
 			pass
 		else:
@@ -252,7 +282,8 @@ def test(argv):
 			result=[]
 			while cant < limit:
 				print "[+] Searching results: " + str(cant) +"\r"
-				res = run(word,cant)
+				#res = our_result
+				res = run(word,cant,server)
 				for x in res:
 					if result.count(x) == 0:
 						if x.count('http')!=0:
@@ -283,8 +314,19 @@ def test(argv):
 							if os.path.exists(dir+'/'+filename):
 								pass
 							else:
-								urllib.urlretrieve(x,str(dir)+"/"+str(filename))
+							#		re = myUrllib.urlretrieve(x,str(dir)+"/"+str(filename))
+								if p == 'http://':
+									proxy = {}
+								else:
+									proxy = {'http':p}
+								filehandler = urllib.urlopen(x, proxies=proxy)
+								body = filehandler.read()
+								filehandler.close()
+								f = open(str(dir)+"/"+str(filename), 'wb')
+								f.write(body)
+								f.close()
 						except IOError:
+							print IOError
 							print "Can't download"
 							np = 1
 						if np == 0:
