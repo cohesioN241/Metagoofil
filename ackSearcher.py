@@ -15,24 +15,30 @@ import httplib
 import re
 import random
 import socket
-import itertools
 import thread
 import time
+import sys
 
 class ackSearcher(object):
 	#I think it's a simple but nice regex
 	r1 = re.compile('href="(http://.{1,80}?)"')
 
-	def __init__(self, url, type, limit=3, botfile='./robots.txt', timeout=3):
+	def __init__(self, url, type, limit=3, botfile='./robots.txt', timeout=3, proxy={}):
 		self.childRex = self.r1
 		self.site = url
 		self.limit = limit
+		#read the robots.txt
 		self.badList = self.readBot(botfile)
 		self.contentType = []
 		self.contentType = type
+
+		#initially intended to limit the time used to open urls
 		socket.setdefaulttimeout(timeout)
+		#two lists to avoid doing the same work twice
 		self.filelist = []
 		self.donelist = []
+
+		self.proxy = proxy
 		
 		#thread stuffs
 		self.mutex = thread.allocate_lock()
@@ -40,14 +46,24 @@ class ackSearcher(object):
 
 	def readBot(self, botfile):
 		abdir = []
-		urllib.urlretrieve('http://'+self.site+'/robots.txt', botfile)
+		try:
+			urllib.urlretrieve('http://'+self.site+'/robots.txt', botfile)
+		except:
+			print 'No robot file. You can use the handy engines.'
+			exit(0)
+
 		bot = open(botfile, 'r')
 		for l in bot.readlines():
-			allow, dir = l.split(':')[0].strip(), l.split(':')[1].strip()
+			print l
+			try:
+				allow, dir = l.split(':')[0].strip(), l.split(':')[1].strip()
+			except:
+				pass
+
 			if allow.find('isa') > 0:
 				dir =  'http://' + self.site + dir
 				abdir.append(dir)
-
+		print abdir
 		return abdir
 
 	def getUrl(self, dir):
@@ -73,6 +89,7 @@ class ackSearcher(object):
 				file = filter(self.noDupFile, file)
 				self.filelist.extend(file)
 				map(self.download, file)
+
 				#so, pass back only links	
 				r = filter(self.isLink, r)
 				#since there could be many links. So stupidly randomly get self.limit links
@@ -91,6 +108,7 @@ class ackSearcher(object):
 			return []
 		
 	def isContentType(self, URLorFile):
+	#Is it a file (as wanted)?
 		for t in self.contentType:
 			if URLorFile.find('.'+t) > -1:
 				return True
@@ -100,9 +118,14 @@ class ackSearcher(object):
 		return not self.isContentType(URLorFile)
 
 	def play(self, lst, level=3):
+	#It's neccessary to do the filter again since there could be
+	#dups with the links found in other pages
 		l = filter(self.noDupLink, lst)
+
 		l = map(self.getUrl, lst)
+		#now l is a list of lists
 		l = self.flatten(l)
+		#now it's not :)
 
 		if level > 0:
 			level = level - 1
@@ -142,7 +165,13 @@ class ackSearcher(object):
 	def retrieve(self, url):
 		filename = url.split('/')[-1]
 		try:
-			urllib.urlretrieve(url, './temp/'+filename)
+			handler = urllib.urlopen(url, proxies = self.proxy)
+			body = handler.read()
+			handler.close()
+			file = open('./temp/' + filename)
+			file.write(body)
+			file.close()
+
 			print '\nDownloading => ', url, '\n'
 		except: 
 			print 'Fail to download : ', url
@@ -151,11 +180,14 @@ class ackSearcher(object):
 		self.mutex.acquire()
 		self.threads = self.threads - 1
 		self.mutex.release()
+	
+	def wait(self):
+		while self.threads != 0:
+			print 'Zzz... ',
+			time.sleep(1)
 
 if __name__ == '__main__':
 	list = ['pdf','ppt','doc','jpg','txt']
-	r = ackSearcher('www.uni.edu', list, limit=7)
-	r.play(r.badList[1:3], level = 9)
-	while r.threads != 0:
-		print 'Zzz... ',
-		time.sleep(1)
+	r = ackSearcher(sys.argv[1], list, limit=5)
+	r.play(r.badList, level = 5)
+	r.wait()
