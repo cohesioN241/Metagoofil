@@ -25,7 +25,7 @@ class ackSearcher(object):
 
 	def __init__(self, url, type, limit=3, level=5, botfile='./robots.txt', timeout=3, proxy={}, destdir='./temp/'):
 		self.childRex = self.r1
-		self.site = url
+		self.site = 'www.'+url
 		self.limit = limit
 		self.level = level
 		self.orilevel = level
@@ -211,7 +211,7 @@ class ackSearcher(object):
 	
 	def printResult(self):
 		print '\n\n======================'
-		print 'Downloaded %d files in %s' % (len(self.filelist), './temp')
+		print 'Downloaded %d files in %s' % (len(self.filelist), self.destdir)
 		print 'In %d links tried.' % len(self.donelist)
 		print 'With deepth %d and limit %d' % (self.orilevel, self.limit)
 		print '\nHere are the files downloaded.'

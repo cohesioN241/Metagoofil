@@ -55,7 +55,7 @@ class MetaForm(Form):
 			argv = ['-d', domain, '-l', limit, '-f',
 			filetype, '-o', output, '-t', localdir, '-e', engine, '-p', proxy]
 			targv = argv,
-			self.metatest(argv)
+#			self.metatest(argv)
 			thread.start_new_thread(self.metatest, targv)
 		else:
 			localdir='./' + localdir + '/'
