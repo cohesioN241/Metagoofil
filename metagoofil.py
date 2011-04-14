@@ -26,10 +26,10 @@ global word,w,limit,result,extcommand
 #Win
 ##extcommand='c:\extractor\\bin\extract.exe -l libextractor_ole2'
 #OSX
-extcommand='/opt/local/bin/extract'
+#extcommand='/opt/local/bin/extract'
 #Cygwin
 #extcommand='/cygdrive/c/extractor/bin/extract.exe'
-#extcommand='/usr/bin/extract'
+extcommand='/usr/bin/extract'
 #proxy={'http': 'http://130.92.70.254:3128'}
 result =[]
 global dir
@@ -150,27 +150,56 @@ def get_info_pdf(file,dir):
 def howmany(w, server):
 	 print '\n\nIN howmany, server is ', server
 	 h = httplib.HTTP(server)
-	 h.putrequest('GET',"/search?num=20&q=site%3A"+w+"+filetype%3A"+file)
+	 if server == 'www.google.com':
+	 	h.putrequest('GET',"/search?num="+str(limit)+"&start=0+hl=en&btnG=B%C3%BAsqueda+en+Google&meta=&q=site%3A"+w+"+filetype%3A"+file)
+	 elif server == 'www.bing.com':
+	 	h.putrequest('GET', "/search?num="+str(limit)+"&q=site%3A"+w+"+filetype%3A"+file)
+	 elif server == 'search.yahoo.com':
+	 	h.putrequest('GET', "/search?num="+str(limit)+"&p=site%3A"+w+"+filetype%3A"+file)
       	 h.putheader('Host', server)
 	 h.putheader('User-agent', 'Internet Explorer 6.0 ')
 	 h.endheaders()
 	 returncode, returnmsg, headers = h.getreply()
 	 data=h.getfile().read()
-	 r1 = re.compile('About [0123456789,]* results')
-	 result = r1.findall(data)
-	 if result ==[]:
-	    r1 = re.compile('About [0123456789,]* results')
-	    result = r1.findall(data)
-	 for x in result:
-	 	clean = re.sub(' <b>','',x)
-		clean = re.sub('</b> ','',clean)
-		clean = re.sub('About','',clean)
-		clean = re.sub('results','',clean)
-		clean = re.sub(',','',clean)
-		clean = re.sub('of','',clean)
+	 if server == 'www.google.com':
+	 	r1 = re.compile('About [0123456789,]* results')
+	 	result = r1.findall(data)
+	 	if result == []:
+	    		r1 = re.compile('About [0123456789,]* results')
+	    		result = r1.findall(data)
+	 	for x in result:
+	 		clean = re.sub(' <b>','',x)
+			clean = re.sub('</b> ','',clean)
+			clean = re.sub('About','',clean)
+			clean = re.sub('results','',clean)
+			clean = re.sub(',','',clean)
+			clean = re.sub('of','',clean)
+
+	 elif server == 'www.bing.com':
+		r1 = re.compile('of [0123456789,]* results')
+		result = r1.findall(data)
+		if result == []:
+			r1 = re.compile('of [0123456789,]* results')
+			result = r1.findall(data)
+		for x in result:
+			clean = re.sub('of','',x)
+			clean = re.sub('results','',clean)
+			clean = re.sub(',','',clean)
+		
+	 elif server == 'search.yahoo.com':
+		r1 = re.compile('[0123456789,]*</strong> results for')
+		result = r1.findall(data)
+		if result == []:
+			r1 = re.compile('[0123456789,]*</strong> results for')
+			result = r1.findall(data)
+		for x in result:
+			clean = re.sub('results','',x)
+			clean = re.sub('for','',clean)
+			clean = re.sub(',','',clean)
+			clean = re.sub('</strong> ','',clean)
 
 	 if len(result) == 0:
-		clean = 0
+	 	clean = 0
 	 print clean
 	 print '\n\nIN howmany, server is ', server
 	 return clean
@@ -179,19 +208,13 @@ def howmany(w, server):
 
 def run(w,i,server):
 	res = []
-	if server == 'www.yahoo.com':
-		server = 'search.yahoo.com'
 	h = httplib.HTTP(server)
-#	if server == 'www.yahoo.com':
-#		h = httplib.HTTP('search.yahoo.com')
-#	else:
-#		h = httplib.HTTP(server)
 	if server == 'www.google.com':
-		h.putrequest('GET',"/search?num=20&start="+str(i)+"&hl=en&btnG=B%C3%BAsqueda+en+Google&meta=&q=site%3A"+w+"+filetype%3A"+file)
+		h.putrequest('GET',"/search?num="+str(limit)+"&start="+str(i)+"&hl=en&btnG=B%C3%BAsqueda+en+Google&meta=&q=site%3A"+w+"+filetype%3A"+file)
 	elif server == 'www.bing.com':
-		h.putrequest('GET', "/search?num=20&q=site%3A"+w+"+filetype%3A"+file)
+		h.putrequest('GET', "/search?num="+str(limit)+"&q=site%3A"+w+"+filetype%3A"+file)
 	elif server == 'search.yahoo.com':
-		h.putrequest('GET', "/search?num=20&p=site%3A"+w+"+filetype%3A"+file)
+		h.putrequest('GET', "/search?num="+str(limit)+"&p=site%3A"+w+"+filetype%3A"+file)
 
 	h.putheader('Host', server)
 	h.endheaders()
@@ -234,6 +257,8 @@ def test(argv):
 			dir = str(arg)
 		elif opt == '-e':
 			server = 'www.' + str(arg)
+			if server == "www.yahoo.com":
+				server = "search.yahoo.com"
 		elif opt == '-p':
 			p = 'http://' + str(arg)
 	if dir == 'none':
@@ -265,10 +290,7 @@ def test(argv):
 	for fi in all:
 		file = fi
 		print "[+] Searching in " + word + " for: " + file
-		if server == 'www.google.com':
-			total = int(howmany(word, server))
-		else:
-			total = 1000
+		total = int(howmany(word, server))
 		print "[+] Total results in " + server + ": "+ str(total)
 		if total == 0:
 			pass
