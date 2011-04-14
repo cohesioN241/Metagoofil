@@ -4,7 +4,7 @@ from tkMessageBox import showinfo
 import os, sys, thread
 from form import *
 import metagoofil
-from bwidget import *
+#from widget import *
 import ackSearcher
 
 class MetaForm(Form):
@@ -30,8 +30,9 @@ class MetaForm(Form):
 		filetype = self.content['Filetype'].get()
 		output = self.content['Output'].get()
 		localdir = self.content['LocalDir'].get()
+		level = self.content['Level'].get()
 		#engine = self.content['Engine'].get()
-		proxy = ''
+		proxy = {}
 		if self.useProxy() == 1:
 			proxy = self.content['Proxy'].get()
 			print "Using proxy: " + proxy
@@ -44,18 +45,26 @@ class MetaForm(Form):
 			engine = 'yahoo.com'
 		elif engine == 4:
 			engine = 'ACK'
+			ack = 1
 		print 'Engine\t=>\t', engine
 
 		self.mutex.acquire()
 		self.threads = self.threads + 1
 		self.mutex.release()
-		argv = ['-d', domain, '-l', limit, '-f',
+		if engine != 'ACK':
+			argv = ['-d', domain, '-l', limit, '-f',
 			filetype, '-o', output, '-t', localdir, '-e', engine, '-p', proxy]
-		targv = argv,
-#		self.metatest(argv)
-		self.progressbar()
-		self.update_progress()
-		thread.start_new_thread(self.metatest, targv)
+			targv = argv,
+			self.metatest(argv)
+			thread.start_new_thread(self.metatest, targv)
+		else:
+			localdir='./' + localdir + '/'
+			self.runAck(domain, filetype, limit, level, './robots.txt', 3, proxy, localdir)
+#		self.progressbar()
+#		self.update_progress()
+	
+	def runAck(self, *args):
+		self.acktest(*args)
 		
 		
 	def progressbar(self):
@@ -87,10 +96,9 @@ class MetaForm(Form):
 class MetaGetForm(MetaForm):
 	title = 'Hi 141'
 	def test(self, argv):
-		#if engine == 'ACK':
-		#	ackSearcher.run(argv)
-		#else:
-			metagoofil.test(argv)
+		metagoofil.test(argv)
+	def acktest(self, *args):
+		ackSearcher.run(*args)
 
 if __name__ == '__main__':
 	MetaGetForm()

@@ -17,18 +17,29 @@ import random
 import socket
 import thread
 import time
-import sys
+import sys, os
 
 class ackSearcher(object):
 	#I think it's a simple but nice regex
 	r1 = re.compile('href="(http://.{1,80}?)"')
 
-	def __init__(self, url, type, limit=3, botfile='./robots.txt', timeout=3, proxy={}):
+	def __init__(self, url, type, limit=3, level=5, botfile='./robots.txt', timeout=3, proxy={}, destdir='./temp/'):
 		self.childRex = self.r1
 		self.site = url
 		self.limit = limit
+		self.level = level
+		self.orilevel = level
+		self.destdir = destdir
+		try:
+			os.mkdir(destdir)
+		except:
+			pass
 		#read the robots.txt
-		self.badList = self.readBot(botfile)
+		try:
+			self.badList = self.readBot(botfile)
+		except:
+			print 'Fail to find the robots.txt. Try the main page of a site.'
+			exit(0)
 		self.contentType = []
 		self.contentType = type
 
@@ -44,6 +55,16 @@ class ackSearcher(object):
 		self.mutex = thread.allocate_lock()
 		self.threads = 0
 
+		self.readPara()
+
+	def readPara(self):
+		print 'url is ', self.site
+		print 'type is ', self.contentType
+		print 'limit is ', self.limit
+		print 'level is ', self.level
+		print 'proxy is ', self.proxy
+		print 'destdir is ', self.destdir
+
 	def readBot(self, botfile):
 		abdir = []
 		try:
@@ -54,7 +75,6 @@ class ackSearcher(object):
 
 		bot = open(botfile, 'r')
 		for l in bot.readlines():
-			print l
 			try:
 				allow, dir = l.split(':')[0].strip(), l.split(':')[1].strip()
 			except:
@@ -63,7 +83,6 @@ class ackSearcher(object):
 			if allow.find('isa') > 0:
 				dir =  'http://' + self.site + dir
 				abdir.append(dir)
-		print abdir
 		return abdir
 
 	def getUrl(self, dir):
@@ -117,7 +136,8 @@ class ackSearcher(object):
 	def isLink(self, URLorFile):
 		return not self.isContentType(URLorFile)
 
-	def play(self, lst, level=3):
+	def play(self, lst):
+		level = self.level
 	#It's neccessary to do the filter again since there could be
 	#dups with the links found in other pages
 		l = filter(self.noDupLink, lst)
@@ -128,12 +148,10 @@ class ackSearcher(object):
 		#now it's not :)
 
 		if level > 0:
-			level = level - 1
-			self.play(l, level)
+			self.level = level - 1
+			self.play(l)
 		else:
-			print 'Finished search with given deepth'
-			print 'Here is Files found'
-			for file in self.filelist: print file
+			self.printResult()
 	
 	def flatten(self, list):
 		ll = []
@@ -165,16 +183,21 @@ class ackSearcher(object):
 	def retrieve(self, url):
 		filename = url.split('/')[-1]
 		try:
-			handler = urllib.urlopen(url, proxies = self.proxy)
-			body = handler.read()
-			handler.close()
-			file = open('./temp/' + filename)
-			file.write(body)
-			file.close()
-
-			print '\nDownloading => ', url, '\n'
+#			urllib.urlretrieve(url, './temp/'+filename)
+			handler = urllib.urlopen(url, proxies=self.proxy)
 		except: 
 			print 'Fail to download : ', url
+			pass
+
+		try:
+			body = handler.read()
+			handler.close()
+			file = open(self.destdir+filename, 'wb')
+			file.write(body)
+			file.close()
+			print '\nDownloading => ', url, '\n'
+		except IOError:
+			print 'IOError ...  ', url
 			pass
 
 		self.mutex.acquire()
@@ -185,9 +208,32 @@ class ackSearcher(object):
 		while self.threads != 0:
 			print 'Zzz... ',
 			time.sleep(1)
+	
+	def printResult(self):
+		print '\n\n======================'
+		print 'Downloaded %d files in %s' % (len(self.filelist), './temp')
+		print 'In %d links tried.' % len(self.donelist)
+		print 'With deepth %d and limit %d' % (self.orilevel, self.limit)
+		print '\nHere are the files downloaded.'
+		for file in self.filelist: print file
+		print '=========================\n'
+
+def run(url, type, limit=3, level=5, botfile='./robots.txt', timeout=3, proxy={}, destdir='./temp/'):
+	try:
+#		list = ['pdf','ppt','doc','jpg','txt','ico']
+		limit = int(limit)
+		level = int(level)
+		r = ackSearcher(url, type, limit, level, botfile, timeout, proxy, destdir)
+		r.play(r.badList)
+		r.wait()
+	except KeyboardInterrupt:
+		r.printResult()
 
 if __name__ == '__main__':
-	list = ['pdf','ppt','doc','jpg','txt']
-	r = ackSearcher(sys.argv[1], list, limit=5)
-	r.play(r.badList, level = 5)
-	r.wait()
+	try:
+		list = ['pdf','ppt','doc','jpg','txt','ico']
+		r = ackSearcher(sys.argv[1], list, limit=5, level=5)
+		r.play(r.badList)
+		r.wait()
+	except KeyboardInterrupt:
+		r.printResult()
