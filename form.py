@@ -15,11 +15,10 @@ class Form:                                           # add non-modal form box
         rcol.pack(side=RIGHT, expand=Y, fill=X)
         self.content = {}
         for label in labels:
-	    if label != 'Engine':
-            	Label(lcol, text=label).pack(side=TOP)
-            	entry = Entry(rcol, width=entrysize)
-            	entry.pack(side=TOP, expand=YES, fill=X)
-            	self.content[label] = entry
+        	Label(lcol, text=label).pack(side=TOP)
+        	entry = Entry(rcol, width=entrysize)
+        	entry.pack(side=TOP, expand=YES, fill=X)
+        	self.content[label] = entry
 	self.proxy = IntVar()
 	Checkbutton(box, text='Use Proxy', variable=self.proxy).pack(side=LEFT, anchor=W)
 	box2 = Frame(parent)
@@ -43,6 +42,8 @@ class Form:                                           # add non-modal form box
     def onSubmit(self):                                      # override this
         for key in self.content.keys():                      # user inputs in 
             print key, '\t=>\t', self.content[key].get()     # self.content[k]
+	#self.progressbar()
+	#self.update_progress()
 
     def onCancel(self):                                      # override if need
         Tk().quit()                                          # default is exit
