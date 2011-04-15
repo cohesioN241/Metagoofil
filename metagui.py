@@ -32,7 +32,7 @@ class MetaForm(Form):
 		localdir = self.content['LocalDir'].get()
 		level = self.content['Level'].get()
 		#engine = self.content['Engine'].get()
-		proxy = {}
+		proxy = ''
 		if self.useProxy() == 1:
 			proxy = self.content['Proxy'].get()
 			print "Using proxy: " + proxy
