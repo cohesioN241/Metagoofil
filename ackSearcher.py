@@ -41,7 +41,9 @@ class ackSearcher(object):
 			print 'Fail to find the robots.txt. Try the main page of a site.'
 			exit(0)
 		self.contentType = []
-		self.contentType = type
+		if type == '':
+			self.contentType  = ['pdf','ppt','doc','jpg','txt','ico']
+		else: self.contentType = type
 
 		#initially intended to limit the time used to open urls
 		socket.setdefaulttimeout(timeout)
