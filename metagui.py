@@ -58,8 +58,11 @@ class MetaForm(Form):
 #			self.metatest(argv)
 			thread.start_new_thread(self.metatest, targv)
 		else:
+			p = {}
+			if proxy == '': p = {}
+			else: p = {'http':'http://'+proxy}
 			localdir='./' + localdir + '/'
-			self.runAck(domain, filetype, limit, level, './robots.txt', 3, proxy, localdir)
+			self.runAck(domain, filetype, limit, level, './robots.txt', 3, p, localdir)
 #		self.progressbar()
 #		self.update_progress()
 	
