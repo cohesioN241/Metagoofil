@@ -187,7 +187,8 @@ class ackSearcher(object):
 			handler = urllib.urlopen(url, proxies=self.proxy)
 		except: 
 			print 'Fail to download : ', url
-			pass
+			print 'Exit the thread...'
+			thread.exit()
 
 		try:
 			body = handler.read()
