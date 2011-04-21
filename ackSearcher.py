@@ -120,6 +120,8 @@ class ackSearcher(object):
 					num = random.randint(0,len(r)-1)
 					for i in range(self.limit):
 						res.append(r[(num+i)%len(r)])
+				else:
+					res = r
 
 #			for s in res: print s
 			self.donelist.extend(res)
