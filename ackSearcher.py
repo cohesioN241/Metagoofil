@@ -3,7 +3,7 @@
 #Class : ackSearcher
 #
 #Description : Looking into /robots.txt file in most sites. Be bad and find the "Disallow" links.
-#				Going to these links, recursively with tunable child links and deepth. To find 
+#				Going to these links, recursively with tunable child links and depth. To find 
 #				files with the types you can specify. Once you find one file, the program will
 #				start a new thread to download it.
 #Tricky Part : Thread synchronization, avoid duplicated download and also links, recursion
@@ -22,6 +22,7 @@ import sys, os
 class ackSearcher(object):
 	#I think it's a simple but nice regex
 	r1 = re.compile('href="(http://.{1,80}?)"')
+	r2 = re.compile('title>.*Index [O|o]f')
 
 	def __init__(self, url, type, limit=3, level=5, botfile='./robots.txt', timeout=3, proxy={}, destdir='./temp/'):
 		self.childRex = self.r1
@@ -30,6 +31,7 @@ class ackSearcher(object):
 		self.level = level
 		self.orilevel = level
 		self.destdir = destdir
+		self.opendir = []
 		try:
 			os.mkdir(destdir)
 		except:
@@ -41,9 +43,9 @@ class ackSearcher(object):
 			print 'Fail to find the robots.txt. Try the main page of a site.'
 			exit(0)
 		self.contentType = []
-		if type == '':
+		if type == 'all':
 			self.contentType  = ['pdf','ppt','doc','jpg','txt','ico']
-		else: self.contentType = type
+		else: self.contentType.append(type)
 
 		#initially intended to limit the time used to open urls
 		socket.setdefaulttimeout(timeout)
@@ -194,6 +196,10 @@ class ackSearcher(object):
 
 		try:
 			body = handler.read()
+			finddir = self.r2.findall(body)
+			if finddir: 
+				print x, 'is open directory'
+				self.opendir.append(x)
 			handler.close()
 			file = open(self.destdir+filename, 'wb')
 			file.write(body)
@@ -216,9 +222,11 @@ class ackSearcher(object):
 		print '\n\n======================'
 		print 'Downloaded %d files in %s' % (len(self.filelist), self.destdir)
 		print 'In %d links tried.' % len(self.donelist)
-		print 'With deepth %d and limit %d' % (self.orilevel, self.limit)
+		print 'With depth %d and limit %d' % (self.orilevel, self.limit)
 		print '\nHere are the files downloaded.'
 		for file in self.filelist: print file
+		print '\nHere are open directories found'
+		for od in self.opendir: print od
 		print '=========================\n'
 
 def run(url, type, limit=3, level=5, botfile='./robots.txt', timeout=3, proxy={}, destdir='./temp/'):
