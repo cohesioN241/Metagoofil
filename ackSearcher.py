@@ -98,6 +98,10 @@ class ackSearcher(object):
 			h.endheaders()
 			returncode, returnmsg, headers = h.getreply()
 			data = h.getfile().read()
+			finddir = self.r2.findall()
+			if finddir: 
+				print x, ' is open directory'
+				self.opendir.append(x)
 			res = []
 			file = []
 			r = self.childRex.findall(data)
@@ -197,10 +201,7 @@ class ackSearcher(object):
 
 		try:
 			body = handler.read()
-			finddir = self.r2.findall(body)
-			if finddir: 
-				print x, 'is open directory'
-				self.opendir.append(x)
+
 			handler.close()
 			file = open(self.destdir+filename, 'wb')
 			file.write(body)
