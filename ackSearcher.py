@@ -1,4 +1,3 @@
-#Author : Chen
 #Version : 0.1
 #Class : ackSearcher
 #
