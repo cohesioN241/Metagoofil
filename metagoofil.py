@@ -26,10 +26,10 @@ global word,w,limit,result,extcommand
 #Win
 ##extcommand='c:\extractor\\bin\extract.exe -l libextractor_ole2'
 #OSX
-#extcommand='/opt/local/bin/extract'
+extcommand='/opt/local/bin/extract'
 #Cygwin
 #extcommand='/cygdrive/c/extractor/bin/extract.exe'
-extcommand='/usr/bin/extract'
+#extcommand='/usr/bin/extract'
 #proxy={'http': 'http://130.92.70.254:3128'}
 result =[]
 global dir
@@ -236,6 +236,7 @@ def test(argv):
 	print len(argv)
 	global limit
 	global file
+	r2 = re.compile('title>.*Index [O|o]f')
 	limit=20
 	down ='a'
 	if len(argv) < 13:
@@ -342,8 +343,18 @@ def test(argv):
 								else:
 									proxy = {'http':p}
 								filehandler = urllib.urlopen(x, proxies=proxy)
+			
 								body = filehandler.read()
-								filehandler.close()
+								filehandler.close()		
+								potentialdir = x.split('/')[0:-1]
+								pdir = '/'.join(potentialdir)
+							#	print '\n\nIs the dir right? ', pdir
+								dirhandler = urllib.urlopen(pdir)
+								notbody = dirhandler.read()
+								dirhandler.close()
+								finddir = r2.findall(notbody)
+								if finddir != []:
+									print x, ' is a open directory.'
 								f = open(str(dir)+"/"+str(filename), 'wb')
 								f.write(body)
 								f.close()
