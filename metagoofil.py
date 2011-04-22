@@ -348,13 +348,16 @@ def test(argv):
 								filehandler.close()		
 								potentialdir = x.split('/')[0:-1]
 								pdir = '/'.join(potentialdir)
-							#	print '\n\nIs the dir right? ', pdir
-								dirhandler = urllib.urlopen(pdir)
-								notbody = dirhandler.read()
-								dirhandler.close()
-								finddir = r2.findall(notbody)
-								if finddir != []:
-									print x, ' is a open directory.'
+								try:
+									dirhandler = urllib.urlopen(pdir)
+									notbody = dirhandler.read()
+									dirhandler.close()
+									finddir = r2.findall(notbody)
+									if finddir != []:
+										print x, ' is a open directory.'
+
+								except:
+									pass
 								f = open(str(dir)+"/"+str(filename), 'wb')
 								f.write(body)
 								f.close()
