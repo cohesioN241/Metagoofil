@@ -98,7 +98,7 @@ class ackSearcher(object):
 			h.endheaders()
 			returncode, returnmsg, headers = h.getreply()
 			data = h.getfile().read()
-			finddir = self.r2.findall()
+			finddir = self.r2.findall(data)
 			if finddir: 
 				print x, ' is open directory'
 				self.opendir.append(x)

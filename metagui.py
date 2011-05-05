@@ -1,7 +1,7 @@
 from Tkinter import *
 from tkMessageBox import showinfo
 import os, sys, thread
-from formtest import *
+from form import *
 import metagoofil
 #from widget import *
 import ackSearcher

@@ -1,7 +1,6 @@
 # a reusable form class, used by getfilegui (and others)
 
 from Tkinter import *
-import Image, ImageTk
 entrysize = 40
 
 class FormTest:                                           # add non-modal form box
@@ -30,6 +29,8 @@ class FormTest:                                           # add non-modal form b
 			Label(text='example: microsoft.com').grid(row=r, column=1, sticky=W)
 		elif label=='Limit':
 			Label(text='# of files you wish to retrieve').grid(row=r, column=1, sticky=W)
+			r = r+1
+			Label(text='for ACK, number of URLs to search through per webpage').grid(row=r, column=1, sticky=W)
 		elif label=='Filetype':
 			Label(text='filetype you wish to search for').grid(row=r, column=1, sticky=W)
 		elif label=='Engine':

@@ -12,24 +12,24 @@ import os
 import urllib
 
 
-print "\n*************************************"
-print "*MetaGooBingFil 	            *"
-print "*Derived from Chris Martorella      *"
-print "*Edge-Security Research             *"
-print "*cmartorella@edge-security.com      *"
-print "*Further modified by Chen           *"
-print "*Engine: [google.com | bing.com]    *"
-print "*************************************\n\n"
+print "\n*************************************************"
+print "*MetaGooBingHooFil                              *"
+print "*Derived from Chris Martorella                  *"
+print "*Edge-Security Research                         *"
+print "*cmartorella@edge-security.com                  *"
+print "*Further modified by Chen                       *"
+print "*Engine: [google.com | bing.com | yahoo.com]    *"
+print "*************************************************\n\n"
 
 
 global word,w,limit,result,extcommand
 #Win
 ##extcommand='c:\extractor\\bin\extract.exe -l libextractor_ole2'
 #OSX
-extcommand='/opt/local/bin/extract'
+#extcommand='/opt/local/bin/extract'
 #Cygwin
 #extcommand='/cygdrive/c/extractor/bin/extract.exe'
-#extcommand='/usr/bin/extract'
+extcommand='/usr/bin/extract'
 #proxy={'http': 'http://130.92.70.254:3128'}
 result =[]
 global dir
@@ -148,7 +148,6 @@ def get_info_pdf(file,dir):
 
 
 def howmany(w, server):
-	 print '\n\nIN howmany, server is ', server
 	 h = httplib.HTTP(server)
 	 if server == 'www.google.com':
 	 	h.putrequest('GET',"/search?num="+str(limit)+"&start=0+hl=en&btnG=B%C3%BAsqueda+en+Google&meta=&q=site%3A"+w+"+filetype%3A"+file)
@@ -161,6 +160,7 @@ def howmany(w, server):
 	 h.endheaders()
 	 returncode, returnmsg, headers = h.getreply()
 	 data=h.getfile().read()
+
 	 if server == 'www.google.com':
 	 	r1 = re.compile('About [0123456789,]* results')
 	 	result = r1.findall(data)
@@ -200,8 +200,6 @@ def howmany(w, server):
 
 	 if len(result) == 0:
 	 	clean = 0
-	 print clean
-	 print '\n\nIN howmany, server is ', server
 	 return clean
 
 
@@ -223,7 +221,6 @@ def run(w,i,server):
 	if server == 'www.google.com':
 #		r1 = re.compile('/url\?q=(.+?'+file+')')
 		r1 = re.compile('href="(http://.{1,100}?\.'+file+')')
-		print '\nThe server I am using is ', server
 	else:
 		r1 = re.compile('href="(http://.{1,100}?\.'+file+')')
 	res = r1.findall(data)
@@ -233,7 +230,8 @@ def run(w,i,server):
 
 
 def test(argv):
-	print len(argv)
+	#print len(argv)
+	print '\n'
 	global limit
 	global file
 	r2 = re.compile('title>.*Index [O|o]f')
